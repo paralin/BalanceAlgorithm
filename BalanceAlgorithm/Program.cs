@@ -5,15 +5,15 @@ namespace BalanceAlgorithm
     class MainClass
     {
         static MatchPlayer[] playerPool;
-        private static int CalculateTeamScore(int team)
+        private static int CalculateTeamScore(uint team)
         {
-            Console.WriteLine ("Team " + team + ": ");
+            Console.WriteLine ("");
             var score = 0;
             for (var i = 0; i < playerPool.Length; ++i)
             {
                 if ((team & 1) == 1)
                 {
-                    Console.WriteLine (playerPool [i].Name + ": " + playerPool [i].Rating);
+                    Console.WriteLine ("   " + playerPool [i].Name + ": " + playerPool [i].Rating);
                     score += (int)playerPool[i].Rating;
                 }
                 team >>= 1;
@@ -21,20 +21,18 @@ namespace BalanceAlgorithm
             return score;
         } 
 
-        private static bool IsValidTeam(int team)
+        private static bool IsValidTeam(uint team)
         {
             // determine how many bits are set, and return true if the result is 5
-            // This is the slow way, but it works.
-            var count = 0;
-            for (var i = 0; i < playerPool.Length; ++i)
+            uint v = (uint)team;
+            uint c; 
+
+            for (c = 0; v!=0; v >>= 1)
             {
-                if ((team & 1) == 1)
-                {
-                    ++count;
-                }
-                team >>= 1;
+                c += v & 1;
             }
-            return (count == 5);
+
+            return (c == playerPool.Length/2);
         }
         
         public static void Main (string[] args)
@@ -53,26 +51,25 @@ namespace BalanceAlgorithm
                 new MatchPlayer(){Name = "goddam", Rating=1170}
             };
 
-            var min = int.MaxValue;
-            var minteam = 0;
-            for (var team = 0; team < Math.Pow (2, playerPool.Length) - 1; ++team) 
+            uint min = uint.MaxValue;
+            uint minteam = 0;
+            for (uint team = 0; team < (uint)(Math.Pow(2, playerPool.Length)-1); ++team) 
             {
                 if (IsValidTeam (team)) {
-                    var opposingTeam = -team;
+                    var opposingTeam = ~team;
                     var teamScore = CalculateTeamScore (team);
                     var opposingTeamScore = CalculateTeamScore (opposingTeam);
                     var scoreDiff = Math.Abs (teamScore - opposingTeamScore);
                     Console.WriteLine ("{0}:{1} - {2}:{3} - Diff = {4}.", team, teamScore, opposingTeam, opposingTeamScore, scoreDiff);
                     if (scoreDiff < min) {
-                        min = scoreDiff;
+                        min = (uint)scoreDiff;
                         minteam = team;
                     }
                 }
             }
 
             Console.WriteLine ("\nOptimal teams found!\n");
-            Console.WriteLine ("Radiant: ");
-            var minOpposingTeam = -minteam;
+            var minOpposingTeam = ~minteam;
             var minTeamScore = CalculateTeamScore(minteam);
             var minOpposingTeamScore = CalculateTeamScore(minOpposingTeam);
             var minScoreDiff = Math.Abs (minTeamScore - minOpposingTeamScore);
